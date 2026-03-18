@@ -1,5 +1,4 @@
 upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-lower = "abcdefghijklmnopqrstuvwxyz"
 
 def caesar_enc(t, shift):
     r = ""
@@ -9,11 +8,6 @@ def caesar_enc(t, shift):
             index = upper.index(char)
             new_index = (index + shift) % 26
             r += upper[new_index]
-
-        elif char in lower:
-            index = lower.index(char)
-            new_index = (index + shift) % 26
-            r += lower[new_index]
 
         else:
             r += char
@@ -33,11 +27,6 @@ def affine_enc(t, a, b):
             x = upper.index(char)
             new_index = (a * x + b) % 26
             r += upper[new_index]
-
-        elif char in lower:
-            x = lower.index(char)
-            new_index = (a * x + b) % 26
-            r += lower[new_index]
 
         else:
             r += char
@@ -65,18 +54,13 @@ def affine_dec(t, a, b):
             new_index = (a_inv * (y - b)) % 26
             r += upper[new_index]
 
-        elif char in lower:
-            y = lower.index(char)
-            new_index = (a_inv * (y - b)) % 26
-            r += lower[new_index]
-
         else:
             r += char
 
     return r
 
 
-t = input("Input text: ")
+t = input("Input text: ").upper()
 
 print("\n--- Caesar Cipher ---")
 shift = int(input("Input shift: "))
