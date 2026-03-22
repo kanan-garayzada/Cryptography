@@ -9,36 +9,39 @@ def xor_bytes(a, b):
     return r
 
 
-def prf_stream(key, nonce, length):
+def aes_prf(key, block):
+    cipher = Cipher(algorithms.AES(key), modes.ECB())
+    encryptor = cipher.encryptor()
+    return encryptor.update(block) + encryptor.finalize()
+
+
+def prg_from_prf(key, nonce, length):
     stream = b""
     counter = 0
 
     while len(stream) < length:
-        block = nonce + counter.to_bytes(8, "big")
-
-        cipher = Cipher(algorithms.AES(key), modes.ECB())
-        encryptor = cipher.encryptor()
-        stream += encryptor.update(block) + encryptor.finalize()
-
+        counter_bytes = counter.to_bytes(16, "big")
+        block = xor_bytes(nonce, counter_bytes)
+        stream += aes_prf(key, block)
         counter += 1
 
     return stream[:length]
 
 
-def cpa_secure_enc(text, key):
-    plaintext = text.encode()
-    nonce = os.urandom(8)
+def cpa_secure_enc(key, message):
+    message_bytes = message.encode("utf-8")
+    nonce = os.urandom(16)
 
-    keystream = prf_stream(key, nonce, len(plaintext))
-    ciphertext = xor_bytes(plaintext, keystream)
+    pad = prg_from_prf(key, nonce, len(message_bytes))
+    ciphertext = xor_bytes(message_bytes, pad)
 
     return nonce, ciphertext
 
 
-def cpa_secure_dec(nonce, ciphertext, key):
-    keystream = prf_stream(key, nonce, len(ciphertext))
-    plaintext = xor_bytes(ciphertext, keystream)
-    return plaintext.decode()
+def cpa_secure_dec(key, nonce, ciphertext):
+    pad = prg_from_prf(key, nonce, len(ciphertext))
+    plaintext_bytes = xor_bytes(ciphertext, pad)
+    return plaintext_bytes.decode("utf-8")
 
 
 def to_binary(data):
@@ -48,13 +51,11 @@ def to_binary(data):
     return r.strip()
 
 
-t = input("Input text: ")
-
 key = os.urandom(16)
+message = input("Input message: ")
 
-nonce, c = cpa_secure_enc(t, key)
-d = cpa_secure_dec(nonce, c, key)
+nonce, ciphertext = cpa_secure_enc(key, message)
+decrypted = cpa_secure_dec(key, nonce, ciphertext)
 
-print("Nonce:     ", to_binary(nonce))
-print("Ciphertext:", to_binary(c))
-print("Decrypted: ", d)
+print("Ciphertext: ", to_binary(ciphertext))
+print("Decrypted:  ", decrypted)
