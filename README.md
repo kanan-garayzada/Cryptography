@@ -1,8 +1,9 @@
 For installation:
 
+```bash
 git clone https://github.com/kanan-garayzada/Cryptography.git
-
 cd Cryptography
+
 
 ###### **GCD**
 
